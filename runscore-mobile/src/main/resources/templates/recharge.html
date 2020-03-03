@@ -15,6 +15,7 @@
     <script src="https://cdn.staticfile.org/layer/2.3/layer.js"></script>
     <script src="https://cdn.staticfile.org/dayjs/1.7.8/dayjs.min.js"></script>
     <script src="https://cdn.staticfile.org/clipboard.js/2.0.4/clipboard.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="/js/common/common.js"></script>
     <link href="/css/common/common.css" rel="stylesheet" type="text/css">
     <style type="text/css">
@@ -272,6 +273,22 @@
             max-width: 80%;
             border-radius: 5px;
         }
+
+        .confirmPage h3 {
+            font-size: 18px;
+            font-weight: 600;
+            padding: 20px;
+        }
+
+        .confirmPage p {
+            color: red;
+            padding: 3px 20px;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(0, 191, 255, 0.22);
+        }
     </style>
 </head>
 
@@ -279,7 +296,7 @@
 <div th:replace="common/header::html"></div>
 <div id="app">
 
-    <template v-if="!waitFlag">
+    <template v-if="!waitFlag && !confirmPage">
         <ul class="foo">
             <li>
                 <div class="charge">充值金额</div>
@@ -298,11 +315,11 @@
                 <div class="info"><i class="iconfont icon-money"></i>充值金额</div>
                 <input type="text" pattern="/\d+/" placeholder="请输入金额" v-model.number="value">
             </li>
-            <li class="buttons">
-                <div class="item" @click="set(2000)">2000</div>
-                <div class="item" @click="set(3000)">3000</div>
-                <div class="item" @click="set(5000)">5000</div>
-                <div class="item" @click="set(10000)">10000</div>
+            <li class="buttons" v-if="this.quickInputAmount">
+                <div class="item" @click="set(item*1)" v-for="item in this.quickInputAmount">{{item}}</div>
+                <!--                <div class="item" @click="set(3000)">3000</div>-->
+                <!--                <div class="item" @click="set(5000)">5000</div>-->
+                <!--                <div class="item" @click="set(10000)">10000</div>-->
             </li>
         </ul>
         <p class="warning">
@@ -311,7 +328,7 @@
         <div class="submit button" @click="submit">充值</div>
         <div class="refresh button" @click="refresh">刷新界面</div>
     </template>
-    <template v-else>
+    <template v-if="waitFlag && !confirmPage">
         <div class="line"></div>
         <div class="refresh2 button" @click="refreshLocal">刷新界面</div>
         <div class="line"></div>
@@ -335,6 +352,36 @@
         </div>
         <div class="button" @click="exit">退出排队</div>
     </template>
+    <template v-if="confirmPage && bankCardList">
+        <div class="confirmPage">
+            <h3>请通过如下渠道尽快完成充值，平台在审核完成后到账</h3>
+            <p>可以先截图保存图片</p>
+            <p>请勿退出此页面，退出后将重新排队！</p>
+            <div class="itemList" v-for="item in bankCardList">
+                <div class="card bank-info">
+                    <div class="card-header">{{item.bankName}}</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-9 offset-sm-3 bank-info-item">
+                                <label>收款人:</label> <span>{{item.accountHolder}}</span>
+                                <button type="button" class="btn btn-sm btn-danger copy-btn"
+                                        :data-clipboard-text="item.accountHolder">复制
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-9 offset-sm-3 bank-info-item">
+                                <label>卡号:</label> <span>{{item.bankCardAccount}}</span>
+                                <button type="button" class="btn btn-sm btn-danger copy-btn"
+                                        :data-clipboard-text="item.bankCardAccount">复制
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
     <div class="toast" v-if="toastShow">
         {{toastContent}}
     </div>
@@ -350,18 +397,65 @@
             waitFlag: false,
             toastShow: false,
             toastContent: "",
-            queue: 30,  // 后端传
-            refreshTime: "2020-2-2 2:00:00",  // 后端传
-            min: 300,  // 后端传
-            max: 10000,  // 后端传,
-            getWaitInfoUrl: ""
+            confirmPage: false,
+            // 后端获取
+            queue: 30,
+            refreshTime: "2020-2-2 2:00:00",
+            min: 300,
+            max: 10000,
+            getWaitInfoUrl: "",
+            quickInputAmount: null,
+            bankCardList: []
+
+
+        },
+        created() {
+            this.getPreChargeInfo();  // 获取基础信息 大小值
+            this.getbankCardInfo();  // 点开获取银行信息
+            // this.getWaitInfo
+            this.getUserAccountInfo()
         },
         methods: {
+            getPreChargeInfo() {
+                let url = "/masterControl/getRechargeSetting";
+                axios.get(url).then(ret => {
+                    this.min = ret.data.data.rechargeLowerLimit;
+                    this.max = ret.data.data.rechargeUpperLimit;
+                    this.quickInputAmount = ret.data.data.quickInputAmount.split(",")
+                })
+            },
+            getbankCardInfo() {
+                let url = "/recharge/findEnabledPayChannel";
+                // todo 目前只提取银行卡信息
+                axios.get(url).then(ret => {
+                    let allList = ret.data.data;
+                    console.log(allList)
+                    allList.forEach(item => {
+                        if (item.channelCode === "yhk") {
+                            this.bankCardList.push({
+                                accountHolder: item.accountHolder,
+                                bankName: item.bankName,
+                                bankCardAccount: item.bankCardAccount
+                            })
+                        }
+                    })
+                    console.log(this.bankCardList)
+                })
+            },
             set(value) {
-                this.value = value
+                this.value = value * 1
             },
             refresh() {
-                console.log(window.location.reload());
+                window.location.reload();
+            },
+            refreshLocal() {
+
+            },
+            getUserAccountInfo : function() {
+                var that = this;
+                that.$http.get('/userAccount/getUserAccountInfo').then(function(res) {
+                    console.log(res)
+                });
             },
             submit() {
                 let ret = parseInt(this.value);
@@ -381,13 +475,53 @@
                     }, 1000)
                     return;
                 }
-                this.waitFlag = true
+                this.waitFlag = true;
+                this.getRechargeLineUp();
             },
             exit() {
                 this.waitFlag = false
             },
-            refreshLocal() {
-
+            getRechargeLineUp() {
+                let url = "/recharge/rechargeLineUp";
+                axios.post(url, {
+                    accountName: this.name,
+                    amount: this.value
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret=>{
+                    console.log(ret)
+                })
+            },
+            getWaitInfo() {
+                let url = "/recharge/rechargeWaitRefresh";
+                axios.post(url, {
+                    accountName: this.name,
+                    amount: this.value
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret=>{
+                    console.log(ret)
+                })
             }
         }
     }).$mount("#app")

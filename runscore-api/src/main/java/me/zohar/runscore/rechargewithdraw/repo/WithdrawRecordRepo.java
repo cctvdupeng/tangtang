@@ -14,6 +14,6 @@ public interface WithdrawRecordRepo
 	long deleteBySubmitTimeGreaterThanEqualAndSubmitTimeLessThanEqual(Date startTime, Date endTime);
 
 	List<WithdrawRecord> findByUserAccountIdAndSubmitTimeGreaterThanEqualAndSubmitTimeLessThanEqual(
-			String userAccountId, Date startTime, Date endTime);
+            String userAccountId, Date startTime, Date endTime);
 
 }
