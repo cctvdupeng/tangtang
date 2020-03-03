@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>客服聊天</title>
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <link href="https://cdn.staticfile.org/bootstrap-fileinput/5.0.1/css/fileinput.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/bootstrap-fileinput/5.0.1/js/fileinput.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="/css/common/common.css" rel="stylesheet" type="text/css">
+    <link href="/css/common/chat.css" rel="stylesheet" type="text/css">
+    <script src="/js/common/common.js"></script>
+    <style type="text/css">
+
+        .master-control-room-row {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .master-control-room-row .col-sm-4 {
+            padding-top: 10px;
+        }
+
+        .master-control-room-row .card-body {
+            height: 520px;
+            padding-left: 2.25rem;
+        }
+
+        .master-control-room-input {
+            text-align: right;
+            width: 40%;
+        }
+
+        .customer-qrcode-div {
+            height: 120px;
+            cursor: pointer;
+        }
+
+        .customer-qrcode {
+            background-color: #fff;
+            height: 120px;
+            padding-right: 5px;
+            float: left !important;
+            cursor: pointer;
+        }
+
+        .no-supplied-customer-qrcode {
+            text-align: center;
+            height: 120px;
+            line-height: 120px;
+            font-weight: bold;
+            color: red;
+        }
+
+        .kv-file-content {
+            width: 100% !important;
+        }
+
+        .view-gathering-code-dialog .modal-content {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="common/header::html"></div>
+
+<div class="chat">
+    <div class="waitList">
+        <h3>等待列表(3)</h3>
+        <div class="list">
+            <div
+                    class="waitListItem"
+                    :class="{active: item.state===1}"
+                    v-for="(item,index) in waitList"
+                    @click="itemClick(item)"
+            >
+                <div class="info">
+                    <div class="name">{{item.userName}}</div>
+                    <div class="date" v-else>{{item.createTime}}</div>
+                </div>
+                <div class="control" v-if="item.state===1">
+                    <div class="remove" @click.stop="changeStatus(item.userName,2)">移除</div>
+                </div>
+                <div class="control" v-if="item.state===0">
+                    <div class="remove" @click.stop="changeStatus(item.userName,1)">接入</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="chatContent">
+        <div class="wrapper" v-if="connectedSession.length>0">
+            <h3>正在与 {{connectedSession[currentIndex].name}} 聊天</h3>
+            <div class="msgList" id="chatContent" ref="chatContentMain">
+                <div class="chatItem clear" :class="item.type" v-for="item in connectedSession[currentIndex].record">
+                    <h3>{{item.from}} {{item.time}}</h3>
+                    <p>{{item.content}}</p>
+                </div>
+            </div>
+            <div class="inputArea">
+                <div class="controls">
+                    <div class="send" @click="sendClick">发送</div>
+                </div>
+                <textarea name="" id="" v-model="input" cols="30" rows="10"
+                          @keydown.enter.prevent="sendClick"
+                ></textarea>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="/static/js/master-control-room.js"></script>
+<script>
+    /*******/
+
+    /*******/
+    window.onbeforeunload = function (e) {
+        e = e || window.event;
+
+        // 兼容IE8和Firefox 4之前的版本
+        if (e) {
+            e.returnValue = '关闭提示';
+        }
+
+        // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
+        return '关闭提示';
+    };
+    new Vue({
+        data: {
+            getMsgUrl: "/chatKf/getChatRecord",  // 获取排队记录
+            sendMsgUrl: "/chatKf/sendMs",
+            getOnChatUrl: "/chatKf/getChatContent",  // 通过用户名获取消息
+            changeStatusUrl: "/chatKf/updateChatState", // 改变通信状态
+            msg: "test",
+            input: "",
+            currentIndex: 0,
+            waitList: [
+                {
+                    name: "张三",
+                    uid: "0001",
+                    time: "16:21"
+                },
+                {
+                    name: "李四",
+                    uid: "0002",
+                    time: "16:21"
+                },
+                {
+                    name: "王五",
+                    uid: "0003",
+                    time: "16:21"
+                }
+            ],
+            connectedSession: [
+                // {
+                // name: "huiyuan1",
+                // record: [
+                //     {type: "service", from: "客服", time: "16:25", content: "客服测试1"},
+                //     {type: "customer", from: "huiyuan1", time: "16:26", content: "客户测试1"},
+                // ],
+
+                // },
+                // {
+                //     name: "会员2",
+                //     record:[
+                //         {type: "service", from: "客服",  time: "16:25", content: "客服测试1"},
+                //         {type: "customer", from: "会员2",  time: "16:26", content: "客户测试1"},
+                //     ],
+                // }
+            ],
+
+        },
+        mounted() {
+            this.getMsg();
+            this.getOnChat();
+
+            // 循环读取消息
+            setInterval(function () {
+                this.getMsg()
+                this.getOnChat()
+
+            }.bind(this), 1000)
+        },
+        methods: {
+            getMsg() {  // 读列表
+                axios.get(this.getMsgUrl).then(ret => {
+                    this.waitList = ret.data.data;
+                    this.waitList.forEach(item => {
+                        let inFlag = this.connectedSession.some(obj => {
+                            return obj.name === item.userName
+                        });
+                        if (!inFlag && item.state===1) {
+
+                            this.connectedSession.push({
+                                name: item.userName,
+                                record: []
+                            })
+                        }
+                    })
+                })
+            },
+            getOnChat() {  // 读消息
+                if (this.connectedSession.length===0) return;
+                this.connectedSession.forEach(item => {
+                    axios.post(this.getOnChatUrl, {
+                        userName: item.name
+                    }, {
+                        transformRequest: [function (data) {
+                            // Do whatever you want to transform the data
+                            let ret = ''
+                            for (let it in data) {
+                                ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                            }
+                            return ret
+                        }],
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    }).then(ret=>{
+                        if(ret.data.data===null||ret.data.data.length===0)return;
+                        ret.data.data.forEach(listObj=>{
+                            if (!listObj.content) return
+                            let now = new Date();
+                            let h = now.getHours() + "";
+                            h = h.length < 2 ? "0" + h : h;
+                            let m = now.getMinutes() + "";
+                            m = m.length < 2 ? "0" + m : m;
+                            let s = now.getSeconds() + "";
+                            s = s.length < 2 ? "0" + s : s;
+                            let time = `${h}:${m}:${s}`
+                            item.record.push({
+                                type: "customer",
+                                from: listObj.userName,
+                                content: listObj.content,
+                                time: time
+                            })
+                            // 3.异步更新视图 scroll到最低端
+                            this.$nextTick(function () {
+                                this.$refs.chatContentMain.scrollTo(0, this.$refs.chatContentMain.scrollHeight)
+                            });
+                        })
+                    })
+                })
+
+            },
+            sendClick() {
+                if (!this.input.trim()) {
+                    return
+                }
+                // 1. todo 发网络请求;
+                axios.post(this.sendMsgUrl, {
+                    content: this.input,
+                    type: 2,
+                    kfName: "admin",
+                    userName: this.connectedSession[this.currentIndex].name
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
+                // 2.本地提交
+                let now = new Date();
+                let h = now.getHours() + "";
+                h = h.length < 2 ? "0" + h : h;
+                let m = now.getMinutes() + "";
+                m = m.length < 2 ? "0" + m : m;
+                let s = now.getSeconds() + "";
+                s = s.length < 2 ? "0" + s : s;
+                let time = `${h}:${m}:${s}`
+                this.connectedSession[this.currentIndex].record.push({
+                    type: "service",
+                    time: time,
+                    from: "客服",
+                    content: this.input
+                });
+                this.input = "";
+
+                // 3.异步更新视图 scroll到最低端
+                this.$nextTick(function () {
+                    this.$refs.chatContentMain.scrollTo(0, this.$refs.chatContentMain.scrollHeight)
+                });
+            },
+            changeStatus(name, statusCode){
+                axios.post(this.changeStatusUrl, {
+                    userName: name,
+                    state: statusCode
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret=>{
+
+                })
+                // 若为移除，1.移除回话列表 2.index重置
+                if (statusCode===2){
+                    let index = this.connectedSession.findIndex(obj => {
+                        return obj.name === name
+                    });
+                    index !== -1 && this.connectedSession.splice(index, 1)
+                    console.log(this.connectedSession)
+                    this.currentIndex = 0;
+                }
+            },
+            itemClick(item){
+                // item的状态为1才能生效
+                console.log(item)
+                if (item.state!==1) return
+                this.currentIndex = this.connectedSession.findIndex(obj => {
+                    return obj.name === item.userName
+                });
+            }
+        }
+    }).$mount(".chat")
+</script>
+</body>
+</html>

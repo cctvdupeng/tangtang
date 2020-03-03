@@ -1,0 +1,186 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+header{
+    width: 100%;
+    height: 80px;
+    background: #17a2b8!important;
+}
+div.chat{
+    height: calc(100vh - 80px);
+    background: #efefef;
+}
+div.chat .waitList{
+    box-sizing: border-box;
+    width: 400px;
+    height: 100%;
+    float: left;
+    padding: 20px;
+}
+div.chat .waitList h3{
+    text-align: left;
+    font-weight: 400;
+    font-size: 14px;
+    background: blue;
+    color: white;
+    line-height: 30px;
+    padding-left: 10px;
+}
+
+div.chat .waitList .list{
+    box-sizing: border-box;
+    width: 100%;
+    height: 80%;
+    overflow-y: auto;
+    border-top: none;
+    background: white;
+    padding-top: 10px;
+}
+div.chat .waitList .list .waitListItem{
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 5px 10px;
+    background: #409EFF;
+    border-radius: 5px;
+    line-height: 20px;
+    padding: 3px 3px 3px 20px;
+}
+div.chat .waitList .list .active{
+    background: #00B83F;
+}
+div.chat .waitList .list .current{
+    background: red;
+}
+div.chat .waitList .list .waitListItem:hover{
+    background: saddlebrown;
+    color: white;
+}
+div.chat .waitList .list .waitListItem:hover .name{
+    color: white;
+}
+div.chat .waitList .list .waitListItem:hover .remove{
+    display: block;
+}
+div.chat .waitList .list .waitListItem .info{
+    display: flex;
+}
+div.chat .waitList .list .waitListItem .name{
+    color: white;
+    margin-right: 10px;
+}
+div.chat .waitList .list .waitListItem .remove{
+    font-size: 12px;
+    color: white;
+    display: none;
+}
+div.chat .waitList .list .waitListItem .remove:hover{
+    color: rgba(0, 0, 255, 0.91);
+}
+div.chat .waitList .list .waitListItem .date{
+    color: #222;
+    font-size: 12px;
+}
+div.chat .chatContent{
+    /*background: rgba(170, 148, 184, 0.35);*/
+    overflow: hidden;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 15px 100px;
+}
+div.wrapper {
+    overflow: hidden;
+    box-sizing: border-box;
+    height: 100%;
+    border-radius: 5px;
+    position: relative;
+    box-shadow: 0 10px 15px rgb(163, 164, 172),
+    10px 0 15px rgb(163, 164, 172),
+    -10px 0 15px rgb(163, 164, 172),
+    0 -10px 15px rgb(163, 164, 172);
+}
+div.wrapper>h3{
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 400;
+    background: red;
+    line-height: 30px;
+    color: white;
+}
+#chatContent{
+    width: 100%;
+    overflow-y: auto;
+    height: calc(100% - 150px);
+}
+#chatContent .chatItem {
+    padding: 0 10px;
+    line-height: 1.2;
+    margin: 10px 0;
+}
+
+#chatContent .chatItem h3 {
+    color: #999999;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+#chatContent .chatItem p {
+    border: 1px solid #999999;
+    padding: 5px;
+    font-size: 15px;
+    border-radius: 6px;
+    background: #f7f7f7;
+    display: inline-block;
+    /*color: white;*/
+}
+
+#chatContent .service p {
+    margin-right: 30px;
+    float: left;
+}
+
+#chatContent .customer h3 {
+    text-align: right;
+}
+
+#chatContent .customer p {
+    margin-left: 30px;
+    float: right;
+}
+.clear::after{
+    content: "";
+    display: block;
+    clear: both;
+}
+div.inputArea{
+    position: absolute;
+    height: 120px;
+    width: 100%;
+    bottom: 0;
+    background: white;
+}
+div.inputArea .controls{
+    height: 30px;
+    background: #e3e3e3;
+}
+div.inputArea .controls .send{
+    cursor: pointer;
+    float: right;
+    line-height: 30px;
+    width: 80px;
+    text-align: center;
+    background: red;
+    color: white;
+
+}
+div.inputArea textarea{
+    box-sizing: border-box;
+    width: 100%;
+    height: 90px;
+    font-size: 18px;
+    outline: none;
+    border: none;
+    padding: 5px 10px;
+
+}

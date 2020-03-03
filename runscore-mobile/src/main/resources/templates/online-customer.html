@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>在线客服</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/layer/2.3/layer.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/js/common/common.js"></script>
+    <link href="/css/common/common.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        .customer-tip {
+            padding-top: 3rem;
+            text-align: center;
+            padding-bottom: 3rem;
+        }
+
+        .qrcode {
+            text-align: center;
+            padding-bottom: 2rem;
+        }
+
+        .qrcode img {
+            max-width: 90%;
+            max-height: 20rem;
+        }
+
+        #chatContent {
+            margin-top: 40px;
+            width: 100%;
+            height: calc(100vh - 40px);
+            background: #e2e2e2;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        #chatContent > div.line {
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #chatContent .main {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        #chatContent .chatItem {
+            padding: 0 10px;
+            line-height: 1.2;
+        }
+
+        #chatContent .chatItem h3 {
+            color: #999999;
+            font-size: 14px;
+        }
+
+        #chatContent .chatItem p {
+            border: 1px solid #999999;
+            padding: 5px;
+            font-size: 15px;
+            border-radius: 6px;
+            background: #f7f7f7;
+            display: inline-block;
+            /*color: white;*/
+        }
+
+        #chatContent .service p {
+            margin-right: 30px;
+            float: left;
+        }
+
+        #chatContent .customer h3 {
+            text-align: right;
+        }
+
+        #chatContent .customer p {
+            margin-left: 30px;
+            float: right;
+        }
+
+        #chatContent div.input {
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            height: 30px;
+            line-height: 30px;
+            justify-content: space-between;
+        }
+
+        #chatContent div.input input {
+            width: 76%;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+            margin: 0 2%;
+            padding: 0 5px;
+
+        }
+
+        #chatContent div.input .send {
+            width: 20%;
+            text-align: center;
+            background: deepskyblue;
+            color: white;
+        }
+        div.controls{
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            height: 80px;
+            background: deepskyblue;
+        }
+        div.controls div.reConnect{
+            width: 60%;
+            margin: 20px auto 0;
+            height: 40px;
+            line-height: 40px;
+            color: white;
+            border-radius: 50px;
+            background: red;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div th:replace="common/header::html"></div>
+<!--	<div id="onlineCustomer" v-cloak>-->
+<!--		<div class="page-body">-->
+<!--			<div class="customer-tip">{{customerServiceExplain}}</div>-->
+<!--			<div class="qrcode" v-on:click="goTo()" v-if="qrcodeStorageId != null && qrcodeStorageId != ''">-->
+<!--				<img :src="'/storage/fetch/' + qrcodeStorageId">-->
+<!--			</div>-->
+<!--		</div>-->
+<!--	</div>-->
+<div id="chatContent">
+    <!--等待中-->
+    <div class="line" v-if="this.waitFlag && this.line">正在接入客服,当前排队{{line}}人{{progress}}</div>
+    <!--开始聊天-->
+    <div class="main"
+         v-if="this.waitFlag===false"
+         ref="chatContentMain"
+    >
+        <div style="text-align: center; font-size: 14px">已经接通客服</div>
+        <div class="chatItem" :class="item.type" v-for="item in chatList">
+            <h3>{{item.from}} {{item.time}}</h3>
+            <p>
+                {{item.content}}
+            </p>
+            <div style="display: table; clear: both"></div>
+        </div>
+    </div>
+
+    <div class="input" v-if="waitFlag===false">
+        <input type="text" v-model="input">
+        <div class="send" @click="sendMsg">发送</div>
+    </div>
+    <div class="controls" v-if="endFlag">
+        <div class="reConnect" @click="reConnect">重新连接客服</div>
+    </div>
+
+</div>
+<link href="/css/common/theme-brown.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+    let changeStatusUrl = "/chatKf/updateChatState";
+    window.onbeforeunload = function (e) {
+        // todo 发送结束请求
+        axios.post(changeStatusUrl, {
+            state: 2
+        }, {
+            transformRequest: [function (data) {
+                // Do whatever you want to transform the data
+                let ret = ''
+                for (let it in data) {
+                    ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                }
+                return ret
+            }],
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }).then(ret=>{
+
+        })
+    };
+    new Vue({
+        el: "#chatContent",
+        data: {
+            line: null,
+            progress: ".",
+            timer: null,  // 等待时候的获取排队情况的timer
+            timer2: null,  // 聊天状态时候无限获取服务器消息的timer
+            waitFlag: true,
+            endFlag: false,
+            input: "",
+            url: "/chatKf/getWaitInfo",
+            sendMsgUrl: "/chatKf/sendMs",
+            getMsgUrl: "/chatKf/getChatContent",
+            chatList: [
+                // {
+                //     type: "service",
+                //     time: "14:51:24",
+                //     from: "客服",
+                //     content: "您好，请留qq或者微信领取名额"
+                // },
+                // {
+                //     type: "customer",
+                //     time: "14:53:24",
+                //     from: "您",
+                //     content: "测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试"
+                // }
+            ]
+        },
+        created() {
+            this.timer = setInterval(this.onProgress, 1000)  // 每秒进行请求数据
+            axios.post(this.getMsgUrl, {
+
+            }, {
+                transformRequest: [function (data) {
+                    // Do whatever you want to transform the data
+                    let ret = '';
+                    for (let it in data) {
+                        ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                    }
+                    return ret
+                }],
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(ret=>{
+
+            })
+        },
+
+        methods: {
+            init() {
+            },
+
+            onProgress() {
+                // 网络请求
+                // axios.defaults.withCredentials=true
+                axios.get(this.url).then(ret => {
+                    let waitLength = ret.data.data;
+                    if (waitLength === null||waitLength.length ===0) {
+                        // 切换聊天状态
+                        clearInterval(this.timer);
+                        this.waitFlag = false;
+                        // timer2启动
+                        this.timer2 = setInterval(()=>{
+                            this.getMsg();
+                        }, 1000)
+                        return
+                    } else {
+                        this.line = waitLength.length
+                    }
+                })
+            },
+
+            sendMsg() {
+                if (!this.input.trim()) {
+                    return
+                }
+                // 1. todo 发网络请求;
+                axios.post(this.sendMsgUrl, {
+                    content: this.input,
+                    type: 1,
+                    kfName: "admin"
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
+                // 2.本地提交
+                let now = new Date();
+                let h = now.getHours() + "";
+                h = h.length < 2 ? "0" + h : h;
+                let m = now.getMinutes() + "";
+                m = m.length < 2 ? "0" + m : m;
+                let s = now.getSeconds() + "";
+                s = s.length < 2 ? "0" + s : s;
+                this.chatList.push({
+                    type: "customer",
+                    time: `${h}:${m}:${s}`,
+                    from: "您",
+                    content: this.input
+                });
+                this.input = "";
+
+                // 3.异步更新视图 scroll到最低端
+                this.$nextTick(function () {
+                    this.$refs.chatContentMain.scrollTo(0, this.$refs.chatContentMain.scrollHeight)
+                });
+
+
+            },
+
+            getMsg() {
+                axios.post(this.getMsgUrl, {
+
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = '';
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret=>{
+                    let msgList = ret.data.data;
+                    msgList.forEach(item=>{
+                        if (item.flag===1){
+                            // 结束聊天
+                            this.endFlag = true
+                            console.log("end");
+                            clearInterval(this.timer2)
+                        }
+                        let now = new Date();
+                        let h = now.getHours() + "";
+                        h = h.length < 2 ? "0" + h : h;
+                        let m = now.getMinutes() + "";
+                        m = m.length < 2 ? "0" + m : m;
+                        let s = now.getSeconds() + "";
+                        s = s.length < 2 ? "0" + s : s;
+                        let time = `${h}:${m}:${s}`
+                        this.chatList.push({
+                            type: "service",
+                            time: time,
+                            from: "客服",
+                            content: item.backContent
+                        })
+                    })
+                    // 3.异步更新视图 scroll到最低端
+                    this.$nextTick(function () {
+                        this.$refs.chatContentMain.scrollTo(0, this.$refs.chatContentMain.scrollHeight)
+                    });
+
+                })
+            },
+
+            reConnect() {
+                this.endFlag = false;
+                this.waitFlag = true;
+                this.timer = setInterval(this.onProgress, 1000);
+            }
+        }
+    })
+    var onlineCustomerVM = new Vue({
+        el: '#onlineCustomer',
+        data: {
+            customerServiceExplain: '',
+            customerServiceUrl: '',
+            qrcodeStorageId: '',
+        },
+        computed: {},
+        created: function () {
+        },
+        mounted: function () {
+            headerVM.title = '在线客服';
+            headerVM.showBackFlag = true;
+            this.loadCustomerQrcode();
+        },
+        methods: {
+            goTo: function () {
+                window.open(this.customerServiceUrl);
+            },
+            loadCustomerQrcode: function () {
+                var that = this;
+                that.$http.get('/masterControl/getCustomerQrcodeSetting').then(function (res) {
+                    if (res.body.data != null) {
+                        that.customerServiceExplain = res.body.data.customerServiceExplain;
+                        that.customerServiceUrl = res.body.data.customerServiceUrl;
+                        that.qrcodeStorageId = res.body.data.qrcodeStorageId;
+                    }
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

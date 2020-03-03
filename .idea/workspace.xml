@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="91e3a327-4405-4fa8-9b8d-85d014d95aa3" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+  </component>
+  <component name="JavaeeView">
+    <option name="frameworksView" value="false" />
+    <option name="showModules" value="false" />
+  </component>
+  <component name="ProjectId" id="1YVWqdVt1QW3YYHR9TRgahLOKZZ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/runscore-api/src/main/java/me/zohar/runscore/chatkf/service" />
+    <property name="project.structure.last.edited" value="Problems" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="editing.templates" />
+  </component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-api\src\main\java\me\zohar\runscore\chatkf\service" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-mobile\src\main\java\me\zohar\runscore\chatkf\controller" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-admin\src\main\java\me\zohar\runscore\admin\chatkf\controller" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-admin\src\main\java\me\zohar\runscore\admin" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-mobile\src\main\resources\templates" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-mobile\src\main\java\me\zohar\runscore" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-api\src\main\java\me\zohar\runscore" />
+      <recent name="C:\Users\Administrator\Desktop\项目-糖糖\runscore\runscore-admin\src\main\resources\templates" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.MerchantApplication">
+    <configuration name="AdminApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="runscore-admin" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="me.zohar.AdminApplication" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="UPDATE_ACTION_UPDATE_POLICY" value="UpdateResources" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MerchantApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="runscore-merchant" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="me.zohar.MerchantApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MobileApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="runscore-mobile" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="me.zohar.MobileApplication" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="UPDATE_ACTION_UPDATE_POLICY" value="UpdateResources" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Spring Boot.AdminApplication" />
+      <item itemvalue="Spring Boot.MerchantApplication" />
+      <item itemvalue="Spring Boot.MobileApplication" />
+    </list>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="91e3a327-4405-4fa8-9b8d-85d014d95aa3" name="Default Changelist" comment="" />
+      <created>1583028433399</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1583028433399</updated>
+      <workItem from="1583028439862" duration="24287000" />
+      <workItem from="1583109855753" duration="29907000" />
+      <workItem from="1583142894976" duration="6244000" />
+      <workItem from="1583149190420" duration="689000" />
+      <workItem from="1583149956318" duration="492000" />
+      <workItem from="1583150640992" duration="9146000" />
+      <workItem from="1583203815612" duration="8508000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="552" y="180" key="#Project_Structure" timestamp="1583110200318">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="552" y="180" key="#Project_Structure/0.0.1920.1040@0.0.1920.1040" timestamp="1583110200318" />
+    <state x="414" y="177" width="1165" height="686" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1583111792680">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="414" y="177" width="1165" height="686" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1583111792680" />
+    <state x="612" y="339" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1583029054710">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="612" y="339" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1583029054710" />
+    <state width="1876" height="216" key="GridCell.Tab.0.bottom" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.0.center" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.0.left" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.0.right" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.1.bottom" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.1.center" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.1.left" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.1.right" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.2.bottom" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.2.center" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.2.left" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state width="1876" height="216" key="GridCell.Tab.2.right" timestamp="1583216956239">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1876" height="216" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1583216956239" />
+    <state x="804" y="218" key="Registry" timestamp="1583042244048">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="804" y="218" key="Registry/0.0.1920.1040@0.0.1920.1040" timestamp="1583042244048" />
+    <state x="630" y="205" key="SettingsEditor" timestamp="1583211717915">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="630" y="205" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1583211717915" />
+    <state x="616" y="235" width="672" height="677" key="run.anything.popup" timestamp="1583042307280">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="616" y="235" width="672" height="677" key="run.anything.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1583042307280" />
+    <state x="811" y="315" key="search.everywhere.popup" timestamp="1583129152321">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="811" y="315" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1583129152321" />
+  </component>
+</project>
