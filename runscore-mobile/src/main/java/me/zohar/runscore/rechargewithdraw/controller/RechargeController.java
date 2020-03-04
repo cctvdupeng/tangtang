@@ -93,12 +93,15 @@ public class RechargeController {
 	 * @param param
 	 * @return
 	 */
+	@ResponseBody
 	@RequestMapping(value="/updateChargeWaitState")
-	public Result updateChargeWaitState(Integer state) {
+	public Result updateChargeWaitState(Integer state) throws Exception{
 		// 获取用户sessionId,通过session获取用户信息
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
+		System.out.println("sessionid:"+sessionId);
+		System.out.println("test:"+loginLog);
 
 		RechargeWait rechargeWait = new RechargeWait();
 		List<RechargeWait> list = rechargeWaitService.findUserInfoByUserName(loginLog.getUserName());

@@ -29,9 +29,8 @@ public class RechargeWaitService {
 		String sql = " select * from recharge_wait where user_name = '" + userName + "' ";
 		Query query = em.createNativeQuery(sql, RechargeWait.class);
 		List<RechargeWait> list = query.getResultList();
+		RechargeWait rechargeWait = new RechargeWait();
 		if (list.size() == 0) {
-
-			RechargeWait rechargeWait = new RechargeWait();
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 			String date = sdf.format(new Date());
 			rechargeWait.setId(date + Math.random() * 1000000);
@@ -42,6 +41,13 @@ public class RechargeWaitService {
 			rechargeWait.setCreateTime(new Date());
 			rechargeWaitRepo.save(rechargeWait);
 		}
+		rechargeWait= list.get(0);
+		rechargeWait.setState(0);
+		rechargeWait.setAmount(amount);
+		rechargeWait.setAccountName(accountName);
+		rechargeWait.setCreateTime(new Date());
+
+		rechargeWaitRepo.save(rechargeWait);
 
 
 	}
@@ -59,9 +65,10 @@ public class RechargeWaitService {
 		String sql = " update recharge_wait set state =2 where userName ='"+userName+"'";
 		
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public List<RechargeWait> findUserInfoByUserName(String userName) {
-		String sql = " select * from recharge_wait where userName = '"+userName+"' ";
+		String sql = " select * from recharge_wait where user_name = '" + userName + "' ";
 		Query query = em.createNativeQuery(sql, RechargeWait.class);
 		List<RechargeWait> list = query.getResultList();
 		return list;

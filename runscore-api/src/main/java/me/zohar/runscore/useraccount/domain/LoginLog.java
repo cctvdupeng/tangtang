@@ -83,4 +83,21 @@ public class LoginLog implements Serializable {
 	 */
 	private Date lastAccessTime;
 
+	@Override
+	public String toString() {
+		return "LoginLog{" +
+				"id='" + id + '\'' +
+				", sessionId='" + sessionId + '\'' +
+				", system='" + system + '\'' +
+				", state='" + state + '\'' +
+				", ipAddr='" + ipAddr + '\'' +
+				", loginLocation='" + loginLocation + '\'' +
+				", loginTime=" + loginTime +
+				", browser='" + browser + '\'' +
+				", os='" + os + '\'' +
+				", msg='" + msg + '\'' +
+				", userName='" + userName + '\'' +
+				", lastAccessTime=" + lastAccessTime +
+				'}';
+	}
 }
