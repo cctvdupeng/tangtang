@@ -42,12 +42,19 @@ public class ChatContent {
 	
 	@Column(name="state")
 	private Integer state;
-
+	
 	@Column(name="type")
 	private Integer type;
-
+	
 	@Column(name="flag")
 	private Integer flag;
+	
+	@Column(name="photo_url")
+	private String photoUrl;
+	
+	@Column(name="photo_id")
+	private String photoId;
+	
 
 	@Override
 	public String toString() {

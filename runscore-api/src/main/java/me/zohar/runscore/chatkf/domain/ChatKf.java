@@ -36,8 +36,6 @@ public class ChatKf {
 	@Column(name="state")
 	private Integer state;
 
-
-
 	@Override
 	public String toString() {
 		return "chatKf [Id=" + Id + ", userAccountId=" + userAccountId + ", userName=" + userName + ", createTime="

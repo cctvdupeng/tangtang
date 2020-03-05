@@ -193,4 +193,19 @@ public class UserAccount implements Serializable {
 		this.setGoogleAuthBindTime(new Date());
 	}
 
+	@Override
+	public String toString() {
+		return "UserAccount [id=" + id + ", userName=" + userName + ", realName=" + realName + ", mobile=" + mobile
+				+ ", secretKey=" + secretKey + ", accountType=" + accountType + ", accountLevel=" + accountLevel
+				+ ", accountLevelPath=" + accountLevelPath + ", loginPwd=" + loginPwd + ", moneyPwd=" + moneyPwd
+				+ ", cashDeposit=" + cashDeposit + ", state=" + state + ", googleSecretKey=" + googleSecretKey
+				+ ", googleAuthBindTime=" + googleAuthBindTime + ", registeredTime=" + registeredTime
+				+ ", latelyLoginTime=" + latelyLoginTime + ", receiveOrderState=" + receiveOrderState
+				+ ", inviteCodeQuota=" + inviteCodeQuota + ", cardWithStorageId=" + cardWithStorageId
+				+ ", cardIsStorageId=" + cardIsStorageId + ", cardTheStorageId=" + cardTheStorageId + ", province="
+				+ province + ", city=" + city + ", cityCode=" + cityCode + ", deletedFlag=" + deletedFlag + ", roleId="
+				+ roleId + ", inviterId=" + inviterId + ", inviter=" + inviter + ", receiveOrderChannels="
+				+ receiveOrderChannels + ", version=" + version + "]";
+	}
+
 }

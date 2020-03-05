@@ -21,6 +21,7 @@ public class ChatKfService {
 	private @Autowired EntityManager em;
 
 	// 获取聊天等待人数。
+	@SuppressWarnings("rawtypes")
 	public List getWaitNum(String userName) {
 		String sql = "select * from chat_kf WHERE state =0 and create_time <= (select create_time from chat_kf WHERE user_name = '"+userName+"')";
 		Query query = em.createNativeQuery(sql, ChatKf.class);
@@ -36,7 +37,7 @@ public class ChatKfService {
 		return list;
 	}
 
-	//获取正在聊天的用户
+	//获取聊天的用户
 	@SuppressWarnings("unchecked")
 	public List<ChatKf> getChatingUser(Integer i) {
 		String sql ="select * from chat_kf where state="+i+"";

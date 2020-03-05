@@ -1,6 +1,7 @@
 package me.zohar.runscore.rechargewithdraw.controller;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.rechargewithdraw.domain.RechargeWait;
+import me.zohar.runscore.rechargewithdraw.domain.RechargeWaitSetting;
 import me.zohar.runscore.rechargewithdraw.param.LowerLevelRechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderParam;
 import me.zohar.runscore.rechargewithdraw.repo.RechargeWaitRepo;
@@ -48,6 +50,7 @@ public class RechargeController {
 
 	@Autowired
 	RechargeWaitRepo rechargeWaitRepo;
+	
 
 	/**
 	 * 充值提交
@@ -60,9 +63,12 @@ public class RechargeController {
 	public Result rechargeLineUp(String accountName,Integer amount) {
 		// 获取用户sessionId,通过session获取用户信息
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+		if(sessionId ==null) {
+			return Result.fail("登陆超时，请退出然后重新登陆。");
+		}
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
-
+		
 		rechargeWaitService.rechargeLineUp(loginLog.getUserName() ,accountName,amount);
 		return Result.success();
 	}
@@ -77,11 +83,16 @@ public class RechargeController {
 	public Result rechargeWaitRefresh(){
 		// 获取用户sessionId,通过session获取用户信息
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+		if(sessionId ==null) {
+			return Result.success().setMsg("登陆超时，请退出然后重新登陆。");
+		}
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
-
+		
 		List<RechargeWait> list = rechargeWaitService.rechargeWaitRefresh(loginLog.getUserName());
-		return Result.success().setData(list);
+
+		Integer num = rechargeWaitService.getWaitNum(loginLog.getUserName());
+		return Result.success().setData(list).setMsg(String.valueOf(num));
 	}
 
 	/**
@@ -90,13 +101,18 @@ public class RechargeController {
 	 * 排队完毕，state=1
 	 * 正在充值，state=2
 	 * 充值完毕，state=3
+	 * 用户确认已经充值，state=4
 	 * @param param
 	 * @return
 	 */
+	@ResponseBody
 	@RequestMapping(value="/updateChargeWaitState")
-	public Result updateChargeWaitState(Integer state) {
+	public Result updateChargeWaitState(Integer state) throws Exception{
 		// 获取用户sessionId,通过session获取用户信息
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+		if(sessionId ==null) {
+			return Result.success().setMsg("登陆超时，请退出然后重新登陆。");
+		}
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
 
@@ -104,10 +120,22 @@ public class RechargeController {
 		List<RechargeWait> list = rechargeWaitService.findUserInfoByUserName(loginLog.getUserName());
 		rechargeWait = list.get(0);
 		rechargeWait.setState(state);
+		if(state==2) {
+			rechargeWait.setCreateTime(new Date());
+		}
 		rechargeWaitRepo.save(rechargeWait);
 		return Result.success();
 	}
 
+	//获取充值页面显示的提示以及排队完毕的超时时间。
+	@ResponseBody
+	@RequestMapping(value="/getPageWord")	
+	public Result getPageWord() {
+		
+		RechargeWaitSetting setting = rechargeWaitService.findPageWord();
+		return Result.success().setData(setting);
+	}
+	
 
 
 	@PostMapping("/generateRechargeOrder")

@@ -12,6 +12,7 @@ var rechargeOrderVM = new Vue({
 		selectedOrder : {},
 		actualPayAmount : '',
 		approvalResult : '',
+		userName:'',
 	},
 	computed : {},
 	created : function() {
@@ -162,6 +163,7 @@ var rechargeOrderVM = new Vue({
 				that.selectedOrder = res.body.data;
 				that.actualPayAmount = that.selectedOrder.rechargeAmount;
 				that.approvalResult = '2';
+				that.userName = that.selectedOrder.userName;
 				that.approvalFlag = true;
 			});
 		},
@@ -189,7 +191,8 @@ var rechargeOrderVM = new Vue({
 			that.$http.post('/recharge/approval', {
 				id : that.selectedOrder.id,
 				actualPayAmount : that.actualPayAmount,
-				approvalResult : that.approvalResult
+				approvalResult : that.approvalResult,
+				userName : that.userName
 			}, {
 				emulateJSON : true
 			}).then(function(res) {

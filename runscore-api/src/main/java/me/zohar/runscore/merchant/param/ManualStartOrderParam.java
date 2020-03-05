@@ -52,4 +52,25 @@ public class ManualStartOrderParam {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	public Date publishTime;
 
+	@Override
+	public String toString() {
+		return "ManualStartOrderParam [merchantNum=" + merchantNum + ", gatheringChannelCode=" + gatheringChannelCode
+				+ ", gatheringAmount=" + gatheringAmount + ", orderNo=" + orderNo + ", notifyUrl=" + notifyUrl
+				+ ", returnUrl=" + returnUrl + ", attch=" + attch + ", sign=" + sign + ", specifiedReceivedAccountId="
+				+ specifiedReceivedAccountId + ", publishTime=" + publishTime + "]";
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
 }

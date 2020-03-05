@@ -63,6 +63,7 @@ public class StorageService {
 		}
 		String id = IdUtils.getId();
 		try {
+			//String localStoragePath = "";
 			String localStoragePath = ConfigHolder.getConfigValue("localStoragePath");
 			Files.copy(inputStream, Paths.get(localStoragePath).resolve(id), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {

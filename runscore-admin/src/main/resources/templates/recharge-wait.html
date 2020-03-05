@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>充值等待</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <script src="https://cdn.staticfile.org/dayjs/1.7.8/dayjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/bootstrap-table/1.13.1/bootstrap-table.min.css">
+    <script src="https://cdn.staticfile.org/bootstrap-table/1.13.1/bootstrap-table.min.js"></script>
+    <script src="https://cdn.staticfile.org/bootstrap-table/1.13.1/locale/bootstrap-table-zh-CN.min.js"></script>
+    <link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/art-template@4.13.2/lib/template-web.js"></script>
+    <link href="/css/common/common.css" rel="stylesheet" type="text/css">
+    <script src="/js/common/common.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script id="recharge-order-detail" type="text/html">
+
+    </script>
+    <style type="text/css">
+        .gathering-code-pic {
+            text-align: center;
+        }
+
+        .gathering-code-pic img {
+            cursor: pointer;
+            max-height: 500px;
+            max-width: 100%;
+        }
+        .myTable{
+            /*border: 1px solid red;*/
+            text-align: center;
+            box-sizing: border-box;
+            margin: 30px auto;
+            width: 90%;
+            padding: 20px;
+        }
+        .myTable .thead {
+            background: #00a65a;
+            height: 40px;
+            line-height: 40px;
+            color: whitesmoke;
+        }
+        tr{
+            height: 30px;
+            line-height: 30px;
+        }
+        span.exit{
+            cursor: pointer;
+            background: #0e9aef;
+            color: white;
+            padding: 0 4px;
+            border-radius: 5px;
+        }
+        span.exit:hover{
+            color: red;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+<div th:replace="common/header::html"></div>
+<div class="table-detail" id="app">
+    <table class="myTable" border="1">
+        <tr class="thead">
+            <th width="20%">用户名</th>
+            <th width="20%">充值银行卡持卡人姓名</th>
+            <th width="10%">充值金额</th>
+            <th width="20%">创建时间</th>
+            <th width="10%">当前状态</th>
+            <th width="20%">操作</th>
+        </tr>
+        <tr v-for="(item,index) in waitList" :key="item.id" v-if="item.userName!='0000'">
+            <td>{{item.userName}}</td>
+            <td>{{item.accountName}}</td>
+            <td>{{item.amount}}</td>
+            <td>{{item.createTime|timeFilter}}</td>
+            <td>{{item.state|codeFilter}}</td>
+            <td>
+                <template v-if="item.state===2">
+                    <span class="exit">正在充值中...</span>
+                </template>
+                <template v-else>
+                    <template v-if="item.state===4">
+                        <span class="exit" @click="">订单审核</span>&nbsp;&nbsp;
+                    </template>
+                    <template v-else>
+                        <span class="exit" @click="setStatus(item.userName, 3)">撤销排队</span>&nbsp;&nbsp;
+                        <span class="exit" @click="setStatus(item.userName, 1)">接入充值</span>
+                    </template>
+                </template>
+            </td>
+        </tr>
+    </table>
+</div>
+</div>
+<script src="/js/recharge-order.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        data:{
+            getWaitInfoUrl: "recharge/findRechargeWaitUser",
+            waitList:null,
+            setStatusUrl: "/recharge/updateRechargeWaitState",
+            status: "获取中...",
+            timer: null
+        },
+        filters:{
+            codeFilter(code){
+                if (code===0)return "排队中";
+                if (code===1)return "排队完毕";
+                if (code===2)return "正在充值";
+                if (code===4)return "已确认充值"
+            },
+            timeFilter(time){
+                let t = new Date(time);
+                return "" + t.getHours().toString().padStart(2,"0") + ":" + t.getMinutes().toString().padStart(2,"0")  + ":" + t.getSeconds().toString().padStart(2,"0")
+            }
+        },
+        created() {
+            this.getWaitInfo();
+            this.timer = setInterval(()=>{
+                this.getWaitInfo()
+            }, 5000)
+        },
+        methods:{
+            getWaitInfo() {
+                axios.get(this.getWaitInfoUrl).then(ret=>{
+                    console.log(ret);
+                    this.waitList = ret.data.data;
+                    if(this.waitList){
+                    }
+                })
+            },
+            canCharge(index){
+                if(this.waitList[0].userName=="0000"&&index===1){return true}
+                if(this.waitList[0].userName!="0000"&&index===0){return true}
+            },
+
+            setStatus(name, statusCode) {
+                // flag==="123"  接入充值
+                // flag===""  设状态
+                let data = {  // 默认是设置状态
+                    userName: name,
+                    state: statusCode,
+                };
+                // if (statusCode===0){  // 接入排队
+                //     // data = {flag: "123"}
+                //     data.state
+                // }
+                axios.post(this.setStatusUrl, data, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret=>{
+                    this.getWaitInfo()
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

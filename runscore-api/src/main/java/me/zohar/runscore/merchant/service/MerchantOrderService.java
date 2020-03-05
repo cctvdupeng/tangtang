@@ -1229,7 +1229,7 @@ public class MerchantOrderService {
 
 	public void noticeDispatchOrder() {
 		ReceiveOrderSetting receiveOrderSetting = receiveOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		if (!receiveOrderSetting.getDispatchMode()) {
+		if (receiveOrderSetting.getDispatchMode()) {
 			return;
 		}
 		List<MerchantOrder> merchantOrders = merchantOrderRepo.findByOrderState(Constant.商户订单状态_等待接单);
@@ -1326,7 +1326,11 @@ public class MerchantOrderService {
 
 	@Transactional
 	public void manualStartOrder(@NotEmpty List<ManualStartOrderParam> params) {
+		
+		
 		for (ManualStartOrderParam param : params) {
+			
+			
 			Merchant merchant = merchantRepo.findByMerchantNumAndDeletedFlagIsFalse(param.getMerchantNum());
 			String amount = new DecimalFormat("###################.###########").format(param.getGatheringAmount());
 			StartOrderParam startOrderParam = new StartOrderParam();
@@ -1434,6 +1438,7 @@ public class MerchantOrderService {
 		}
 
 		Integer orderEffectiveDuration = receiveOrderSetting.getReceiveOrderEffectiveDuration();
+		
 		MerchantOrder merchantOrder = param.convertToPo(merchant.getId(), gatheringChannel.getId(),
 				gatheringChannelRate.getRate(), orderEffectiveDuration);
 		MerchantOrderPayInfo payInfo = param.convertToPayInfoPo(merchantOrder.getId());

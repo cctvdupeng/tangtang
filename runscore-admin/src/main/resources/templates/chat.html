@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>客服聊天</title>
     <link href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://at.alicdn.com/t/font_1666033_cqz0oi683dt.css">
     <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
@@ -70,13 +71,13 @@
 
 <div class="chat">
     <div class="waitList">
-        <h3>等待列表(3)</h3>
+        <h3>等待列表</h3>
         <div class="list">
             <div
-                    class="waitListItem"
-                    :class="{active: item.state===1}"
-                    v-for="(item,index) in waitList"
-                    @click="itemClick(item)"
+                class="waitListItem"
+                :class="{active: item.state===1}"
+                v-for="(item,index) in waitList"
+                @click="itemClick(item)"
             >
                 <div class="info">
                     <div class="name">{{item.userName}}</div>
@@ -98,12 +99,22 @@
             <div class="msgList" id="chatContent" ref="chatContentMain">
                 <div class="chatItem clear" :class="item.type" v-for="item in connectedSession[currentIndex].record">
                     <h3>{{item.from}} {{item.time}}</h3>
-                    <p>{{item.content}}</p>
+                    <img
+                        style="max-width: 50%"
+                        :style="{float:item.type==='service'?'right':'left'}"
+                        v-if="checkContent(item.content)"
+                        :src="checkContent(item.content)">
+                    <p v-else>{{item.content}}</p>
                 </div>
             </div>
             <div class="inputArea">
                 <div class="controls">
                     <div class="send" @click="sendClick">发送</div>
+                    <label style="float: right;font-size: 18px; margin-right: 10px;cursor: pointer">
+                        <input type="file" v-model="file" style="display: none" @change="fileChange">
+                        <i style="margin-left: 3px; " class="iconfont icon-tupian"></i>
+                    </label>
+
                 </div>
                 <textarea name="" id="" v-model="input" cols="30" rows="10"
                           @keydown.enter.prevent="sendClick"
@@ -140,6 +151,7 @@
             msg: "test",
             input: "",
             currentIndex: 0,
+            file: null,
             waitList: [
                 {
                     name: "张三",
@@ -174,7 +186,6 @@
                 //     ],
                 // }
             ],
-
         },
         mounted() {
             this.getMsg();
@@ -185,9 +196,76 @@
                 this.getMsg()
                 this.getOnChat()
 
-            }.bind(this), 1000)
+            }.bind(this), 3000)
         },
         methods: {
+            checkContent(content) {
+                // img+url
+                let ret = content.split("img+")
+                return ret.length > 1 ? ret[1] : false
+            },
+            fileChange(e) {
+                console.log(e);
+                let url = "chatKf/uploadPhoto";
+                let formData = new FormData();
+                formData.append('file_data', e.target.files[0])
+                axios({
+                    url: url,
+                    method: 'post',
+                    data: formData,
+                    processData: false,// 告诉axios不要去处理发送的数据(重要参数)
+                    contentType: false,   // 告诉axios不要去设置Content-Type请求头
+                }).then((res) => {
+                    console.log(res);
+                    if (res.data.code === 200) {
+                        // 1.网络请求
+                        console.log(res.data.data)
+                        axios.post(this.sendMsgUrl, {
+                            content: "img+" + res.data.data,
+                            kfName: "admin",
+                            type: 2,
+                            userName: this.connectedSession[this.currentIndex].name
+
+                        }, {
+                            transformRequest: [function (data) {
+                                // Do whatever you want to transform the data
+                                let ret = '';
+                                for (let it in data) {
+                                    ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                                }
+                                return ret
+                            }],
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        });
+
+                        // 2.本地提交
+                        let now = new Date();
+                        let h = now.getHours() + "";
+                        h = h.length < 2 ? "0" + h : h;
+                        let m = now.getMinutes() + "";
+                        m = m.length < 2 ? "0" + m : m;
+                        let s = now.getSeconds() + "";
+                        s = s.length < 2 ? "0" + s : s;
+                        this.connectedSession[this.currentIndex].record.push({
+                            type: "service",
+                            time: `${h}:${m}:${s}`,
+                            from: "您",
+                            content: "img+" + res.data.data
+                        });
+                        // this.chatList.push({
+                        //     type: "service",
+                        //     time: `${h}:${m}:${s}`,
+                        //     from: "您",
+                        //     content: "img+" + res.data.data
+                        // });
+                        // this.input = "";
+                    } else {
+
+                    }
+                })
+            },
             getMsg() {  // 读列表
                 axios.get(this.getMsgUrl).then(ret => {
                     this.waitList = ret.data.data;
@@ -195,7 +273,7 @@
                         let inFlag = this.connectedSession.some(obj => {
                             return obj.name === item.userName
                         });
-                        if (!inFlag && item.state===1) {
+                        if (!inFlag && item.state === 1) {
 
                             this.connectedSession.push({
                                 name: item.userName,
@@ -206,7 +284,7 @@
                 })
             },
             getOnChat() {  // 读消息
-                if (this.connectedSession.length===0) return;
+                if (this.connectedSession.length === 0) return;
                 this.connectedSession.forEach(item => {
                     axios.post(this.getOnChatUrl, {
                         userName: item.name
@@ -222,9 +300,9 @@
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
-                    }).then(ret=>{
-                        if(ret.data.data===null||ret.data.data.length===0)return;
-                        ret.data.data.forEach(listObj=>{
+                    }).then(ret => {
+                        if (ret.data.data === null || ret.data.data.length === 0) return;
+                        ret.data.data.forEach(listObj => {
                             if (!listObj.content) return
                             let now = new Date();
                             let h = now.getHours() + "";
@@ -294,7 +372,7 @@
                     this.$refs.chatContentMain.scrollTo(0, this.$refs.chatContentMain.scrollHeight)
                 });
             },
-            changeStatus(name, statusCode){
+            changeStatus(name, statusCode) {
                 axios.post(this.changeStatusUrl, {
                     userName: name,
                     state: statusCode
@@ -310,11 +388,11 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     }
-                }).then(ret=>{
+                }).then(ret => {
 
                 })
                 // 若为移除，1.移除回话列表 2.index重置
-                if (statusCode===2){
+                if (statusCode === 2) {
                     let index = this.connectedSession.findIndex(obj => {
                         return obj.name === name
                     });
@@ -323,10 +401,10 @@
                     this.currentIndex = 0;
                 }
             },
-            itemClick(item){
+            itemClick(item) {
                 // item的状态为1才能生效
                 console.log(item)
-                if (item.state!==1) return
+                if (item.state !== 1) return
                 this.currentIndex = this.connectedSession.findIndex(obj => {
                     return obj.name === item.userName
                 });

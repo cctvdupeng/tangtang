@@ -1,5 +1,7 @@
 package me.zohar.runscore.chatkf.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -7,9 +9,12 @@ import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
+import cn.hutool.core.util.ArrayUtil;
 import me.zohar.runscore.chatkf.domain.ChatContent;
 import me.zohar.runscore.chatkf.domain.ChatKf;
 import me.zohar.runscore.chatkf.repo.ChatContentRepo;
@@ -17,6 +22,7 @@ import me.zohar.runscore.chatkf.repo.ChatKfRepo;
 import me.zohar.runscore.chatkf.service.ChatContentService;
 import me.zohar.runscore.chatkf.service.ChatKfService;
 import me.zohar.runscore.common.vo.Result;
+import me.zohar.runscore.storage.service.StorageService;
 import me.zohar.runscore.useraccount.domain.LoginLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.repo.LoginLogRepo;
@@ -39,6 +45,9 @@ public class chatKfController {
 	@Autowired
 	ChatContentService chatContentService;
 
+	@Autowired
+	StorageService storageService;
+
 	/**
 	 * 点击客服，如果不是你则显示等待人数，如果排队到你则显示聊天页面。
 	 * 
@@ -52,7 +61,7 @@ public class chatKfController {
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
-		
+
 		UserAccount userAccount = new UserAccount();
 		userAccount = userAccountRepo.findByIdAndDeletedFlagIsFalse(loginLog.getId());
 		System.out.println("userAccount:" + userAccount);
@@ -97,7 +106,7 @@ public class chatKfController {
 
 		List<ChatKf> user = chatKfService.getChatingUser(1);
 		List<ChatKf> user1 = chatKfService.getChatingUser(0);
-		for(ChatKf chatKf : user1) {
+		for (ChatKf chatKf : user1) {
 			user.add(chatKf);
 		}
 		return Result.success().setData(user);
@@ -108,24 +117,23 @@ public class chatKfController {
 	 */
 //	@RequestMapping(value="/getNum")
 //	@ResponseBody
-	
-	
+
 	/**
 	 * 更改用户聊天状态
 	 */
 	@RequestMapping(value = "/updateChatState")
 	@ResponseBody
-	public Result inChat(Integer state,String userName) {
+	public Result inChat(Integer state, String userName) {
 		// state =1接入聊天，=2 结束聊天。
 		// 获取用户sessionId,通过session获取用户信息
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
 
-		if(userName==null && state ==2) {
+		if (userName == null && state == 2) {
 			userName = loginLog.getUserName();
 		}
-		
+
 		ChatKf chatKf = new ChatKf();
 		List<ChatKf> list = chatKfService.selectOnebyId(userName);
 		chatKf = (ChatKf) list.get(0);
@@ -133,78 +141,84 @@ public class chatKfController {
 		chatKfRepo.save(chatKf);
 		return Result.success();
 	}
-	
-	
-	
+
 	/**
 	 * 点击发送，存入信息
 	 */
-	@RequestMapping(value="/sendMs")
+	@RequestMapping(value = "/sendMs")
 	@ResponseBody
-	public Result sendMs(String content,Integer type,String userName,String kfName) {
+	public Result sendMs(String content, Integer type, String userName, String kfName) throws IOException {
 		// 获取用户sessionId,通过session获取用户信息
-		//type =1 问题，=2 回复
+		// type =1 问题，=2 回复
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+		System.out.println("sessionID:"+sessionId);
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
 		String name = loginLog.getUserName();
-		
+
 		ChatContent chatContent = new ChatContent();
-		chatContent.setId(loginLog.getId()+Math.random()*10000000);
-		if(type ==1) {
+		chatContent.setId(loginLog.getId() + Math.random() * 10000000);
+
+		// 加载图片
 			chatContent.setContent(content);
 			chatContent.setKfName(kfName);
 			chatContent.setUserName(name);
 			chatContent.setState(1);
 			chatContent.setType(0);
-		}
-		if(type ==2) {
-			chatContent.setBackContent(content);
-			chatContent.setUserName(userName);
-			chatContent.setKfName(name);
-			chatContent.setState(2);
-			chatContent.setType(0);
-		}
+			chatContent.setFlag(0);
+			
 		chatContent.setCreateTime(new Date());
 		chatContentRepo.save(chatContent);
-		
 		return Result.success();
 	}
 	
 	/**
+	 * 上传图片
+	 * @throws IOException 
+	 */
+	@RequestMapping(value="/uploadPhoto")
+	@ResponseBody
+	public Result uploadPic(@RequestParam("file_data") MultipartFile[] files) throws IOException {
+		if (ArrayUtil.isEmpty(files)) {
+			return Result.fail("请选择要上传的图片");
+		}
+		String storageIds = null;
+		for (MultipartFile file : files) {
+			String filename = file.getOriginalFilename();
+			String storageId = storageService.uploadGatheringCode(file.getInputStream(), file.getSize(),
+					file.getContentType(), filename);
+			storageIds=storageId;
+		}
+		String url = "storage/fetch/"+storageIds;
+		return Result.success().setData(url);
+	}
+
+	/**
 	 * 获取信息
 	 */
-	@RequestMapping(value="/getChatContent")
+	@RequestMapping(value = "/getChatContent")
 	@ResponseBody
 	public Result getChatContent(String userName) {
 		String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 		LoginLog loginLog = new LoginLog();
 		loginLog = loginLogRepo.findTopBySessionIdOrderByLoginTime(sessionId);
-		
-		userName =loginLog.getUserName();
-		
-		List<ChatContent> list = chatContentService.findContentByUserName(userName,2);
-		
-		//给他标记已经读取状态
-		if(!list.isEmpty()) {
-			//给他标记已经读取状态
-			for(ChatContent chatContet:list) {
+
+		userName = loginLog.getUserName();
+
+		List<ChatContent> list = chatContentService.findContentByUserName(userName, 2);
+
+		if (!list.isEmpty()) {
+			// 给他标记已经读取状态
+			for (ChatContent chatContet : list) {
 				chatContet.setType(1);
+				//String localStoragePath = ConfigHolder.getConfigValue("localStoragePath");
+				chatContet.setPhotoUrl("D:\\upload Files\\"+chatContet.getPhotoId());
 				chatContentRepo.save(chatContet);
 			}
 		}
 		
+		
 		return Result.success().setData(list);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 }

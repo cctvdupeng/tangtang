@@ -283,4 +283,9 @@ public class PageController {
 	public String Chat() {
 		return "chat";
 	}
+
+	@GetMapping("/recharge-wait")
+	public String RechargeWait() {
+		return "recharge-wait";
+	}
 }

@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -42,11 +44,13 @@ import me.zohar.runscore.mastercontrol.domain.RechargeSetting;
 import me.zohar.runscore.mastercontrol.repo.RechargeSettingRepo;
 import me.zohar.runscore.rechargewithdraw.domain.PayChannel;
 import me.zohar.runscore.rechargewithdraw.domain.RechargeOrder;
+import me.zohar.runscore.rechargewithdraw.domain.RechargeWait;
 import me.zohar.runscore.rechargewithdraw.param.LowerLevelRechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.repo.PayChannelRepo;
 import me.zohar.runscore.rechargewithdraw.repo.RechargeOrderRepo;
+import me.zohar.runscore.rechargewithdraw.repo.RechargeWaitRepo;
 import me.zohar.runscore.rechargewithdraw.vo.RechargeOrderVO;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
@@ -75,6 +79,11 @@ public class RechargeService {
 
 	@Autowired
 	private PayChannelRepo payChannelRepo;
+	
+	private @Autowired EntityManager em;
+	
+	@Autowired
+	RechargeWaitRepo rechargeWaitRepo;
 
 	/**
 	 * 核对订单
@@ -87,6 +96,9 @@ public class RechargeService {
 			throw new BizException(BizError.充值订单不存在);
 		}
 		if (Constant.充值订单状态_已支付.equals(order.getOrderState())) {
+			return;
+		}
+		if (Constant.充值订单状态_已结算.equals(order.getOrderState())) {
 			return;
 		}
 
@@ -344,4 +356,43 @@ public class RechargeService {
 		return pageResult;
 	}
 
+	@SuppressWarnings("unchecked")
+	public Object findRechargeWaitUser(Integer state) {
+		String sql = " select * from recharge_wait where state != 3 order by create_time desc";
+		Query query = em.createNativeQuery(sql, RechargeWait.class);
+		List<RechargeWait> list = query.getResultList();
+		return list;
+	}
+
+	@SuppressWarnings({ "unchecked", "unused" })
+	public void updateRechargeWaitState(Integer state, String userName) {
+		String sql = "select * from recharge_wait where user_name = '"+userName+"' order by create_time desc limit 1";
+		Query query = em.createNativeQuery(sql, RechargeWait.class);
+		List<RechargeWait> list = query.getResultList();
+		RechargeWait wait = list.get(0);
+		wait.setState(state);
+		rechargeWaitRepo.save(wait);
+	
+	}
+
+	@SuppressWarnings("unchecked")
+	public void updateNullDataState(int i) {
+		String sql = "select * from recharge_wait where user_name = '0000' order by create_time desc limit 1";
+		Query query = em.createNativeQuery(sql, RechargeWait.class);
+		List<RechargeWait> list = query.getResultList();
+		RechargeWait wait = list.get(0);
+		
+		wait.setAmount(i);
+		rechargeWaitRepo.save(wait);
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

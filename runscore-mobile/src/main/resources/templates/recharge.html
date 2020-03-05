@@ -114,6 +114,16 @@
             background: #79d6ff;
             border: 2px solid #79d6ff;
         }
+
+        .finish{
+            margin: 0 auto;
+            width: 50%;
+            padding: 10px;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            background: red;
+        }
     </style>
     <style>
         #app {
@@ -295,7 +305,7 @@
 <body>
 <div th:replace="common/header::html"></div>
 <div id="app">
-
+    <audio src="audio/ring.wav" style="display: none" ref="audio"></audio>
     <template v-if="!waitFlag && !confirmPage">
         <ul class="foo">
             <li>
@@ -330,24 +340,37 @@
     </template>
     <template v-if="waitFlag && !confirmPage">
         <div class="line"></div>
-        <div class="refresh2 button" @click="refreshLocal">刷新界面</div>
+        <div class="refresh2 button" @click="refreshLocal" v-if="!readyFlag">刷新界面</div>
+        <div class="refresh2 button"
+             @click="toPay"
+             v-if="readyFlag"
+             style="background: green"
+        >查看支付信息
+        </div>
+
         <div class="line"></div>
-        <p class="queue">
+        <p class="queue" v-if="queue!==0">
             前面还有： <span>{{queue}}</span>人排队充值。
         </p>
+        <p class="queue" v-else>
+            请在 {{time}} 秒内点击获取支付信息，超时将取消排队！
+        </p>
+
         <p class="tips">
-            【本页面会在排队到达后自动跳转充值页面】 排队人数30秒刷新一次，请注意关注！
+            充值银行卡持卡人姓名:【{{name}}】
+        </p>
+        <p class="tips">
+            充值金额: 【{{value}}】
         </p>
         <div class="warning">
             <h3>注意事项</h3>
             <ul class="page2">
-                <li>1.下一次排队数据重置将在{{refreshTime}}进行，请注意数据更行！</li>
+                <li>1.请注意数据更新！一分钟不确认充值显示银行卡，排队自动作废！</li>
                 <li>2.请勿填写附言，填写附言后无法自动到账！</li>
                 <li>3.平台填写金额应当于银行转账金额完全一直，否则将无法及时到账！</li>
                 <li>4.平台的收款账号会不定时更换，请在获取最近信息后充值，否则将无法及时到账。</li>
                 <li>5.填写姓名于您的银行卡持卡人姓名不一致，无法自动到账！</li>
                 <li>6.若出现2小时为到账的情况，请及时联系在线客服哦！</li>
-                <li>7.一分钟不确认充值显示银行卡，排队自动作废！</li>
             </ul>
         </div>
         <div class="button" @click="exit">退出排队</div>
@@ -380,6 +403,8 @@
                     </div>
                 </div>
             </div>
+            <div class="finish" @click="finish" v-if="confirmClick===false">已完成充值</div>
+            <div class="finish" v-else style="background: gainsboro; color: red">后台审核中...</div>
         </div>
     </template>
     <div class="toast" v-if="toastShow">
@@ -395,26 +420,41 @@
             name: "",
             value: "",
             waitFlag: false,
+            readyFlag: false,
             toastShow: false,
             toastContent: "",
             confirmPage: false,
+            time: 60,
+            timer2: null, // 超时timer
+            timer: null,
+            depositDate: dayjs().format('YYYY-MM-DD'),
+            depositTime: dayjs().format('HH:mm'),
+            payChannelId: null,
+            confirmClick: false,
             // 后端获取
-            queue: 30,
+            username: null,
+            queue: "获取中...",
             refreshTime: "2020-2-2 2:00:00",
             min: 300,
             max: 10000,
             getWaitInfoUrl: "",
             quickInputAmount: null,
-            bankCardList: []
+            bankCardList: [],
+
 
 
         },
         created() {
             this.getPreChargeInfo();  // 获取基础信息 大小值
             this.getbankCardInfo();  // 点开获取银行信息
-            // this.getWaitInfo
-            this.getUserAccountInfo()
+            this.getUserAccountInfo();  // 获取用户名
+
         },
+        // mounted() {
+        //     console.log(this.$refs.audio);
+        //     console.log(this.$refs)
+        //     this.$refs.audio.play();
+        // },
         methods: {
             getPreChargeInfo() {
                 let url = "/masterControl/getRechargeSetting";
@@ -429,16 +469,17 @@
                 // todo 目前只提取银行卡信息
                 axios.get(url).then(ret => {
                     let allList = ret.data.data;
-                    console.log(allList)
                     allList.forEach(item => {
                         if (item.channelCode === "yhk") {
                             this.bankCardList.push({
                                 accountHolder: item.accountHolder,
                                 bankName: item.bankName,
-                                bankCardAccount: item.bankCardAccount
+                                bankCardAccount: item.bankCardAccount,
+                                payChannelId: item.id
                             })
                         }
                     })
+                    this.bankCardList = this.bankCardList.slice(0, 1);
                     console.log(this.bankCardList)
                 })
             },
@@ -451,10 +492,23 @@
             refreshLocal() {
 
             },
-            getUserAccountInfo : function() {
+            getUserAccountInfo: function () {
                 var that = this;
-                that.$http.get('/userAccount/getUserAccountInfo').then(function(res) {
-                    console.log(res)
+                that.$http.get('/userAccount/getUserAccountInfo').then(function (ret) {
+                    this.username = ret.body.data.userName;
+                    this.getWaitInfo()
+                });
+            },
+            finish() {
+                this.setStatus(4);
+                this.confirmPage = false;
+                layer.open({
+                    title: '提示',
+                    icon: 7,
+                    closeBtn: 0,
+                    btn: [],
+                    content: '后台将快速审核您的充值数据',
+                    time: 3000
                 });
             },
             submit() {
@@ -477,15 +531,73 @@
                 }
                 this.waitFlag = true;
                 this.getRechargeLineUp();
+                this.getWaitInfo()
             },
             exit() {
-                this.waitFlag = false
+                this.waitFlag = false;
+                console.log(this.waitFlag, this.confirmPage)
+                this.setStatus(3);
+            },
+            setStatus(statusCode,flag) { // （0=进去排队，1=排队完毕，2=正在充值，3=完毕）
+                let url = "/recharge/updateChargeWaitState";
+                let req_data = {state: statusCode};
+                if (flag){req_data.payChannelId=this.bankCardList[0].payChannelId}
+                axios.post(url, req_data, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = ''
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
             },
             getRechargeLineUp() {
                 let url = "/recharge/rechargeLineUp";
                 axios.post(url, {
                     accountName: this.name,
                     amount: this.value
+                }, {
+                    transformRequest: [function (data) {
+                        // Do whatever you want to transform the data
+                        let ret = '';
+                        for (let it in data) {
+                            ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                        }
+                        return ret
+                    }],
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }).then(ret => {
+                    this.getWaitInfo();
+                }).catch(reason => {
+                    console.log("catch error")
+                    this.getWaitInfo();
+                })
+            },
+            toPay() {
+                clearInterval(this.timer2);
+                this.confirmPage = true;
+                this.setStatus(2, true);
+                window.removeEventListener("beforeunload", this.forgive)
+                layer.open({
+                    title: '提示',
+                    icon: 7,
+                    closeBtn: 0,
+                    btn: [],
+                    content: '正在创建充值订单...',
+                    time: 2000
+                });
+                axios.post('/recharge/generateRechargeOrder', {
+                    payChannelId: this.bankCardList[0].payChannelId,
+                    depositTime: this.depositDate + ' ' + this.depositTime,
+                    depositor: this.name,
+                    rechargeAmount: this.value
                 }, {
                     transformRequest: [function (data) {
                         // Do whatever you want to transform the data
@@ -498,9 +610,21 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     }
-                }).then(ret=>{
-                    console.log(ret)
+                }).then(() => {
+                    layer.open({
+                        title: '提示',
+                        icon: 7,
+                        closeBtn: 0,
+                        btn: [],
+                        content: '请于30分钟内完成充值，否则视为放弃充值',
+                        time: 5000
+                    });
                 })
+            },
+            forgive() {
+                this.setStatus(3);
+                this.time = 60;
+                clearInterval(this.timer2);
             },
             getWaitInfo() {
                 let url = "/recharge/rechargeWaitRefresh";
@@ -519,8 +643,56 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     }
-                }).then(ret=>{
-                    console.log(ret)
+                }).then(ret => {
+                    console.log("获取");
+                    console.log(ret.data)
+                    let list = ret.data.data;
+                    let index = list.findIndex(item => item.userName === this.username);
+                    let self = ret.data.data;
+                    if (!self || self.length === 0) {  // -1 没有数据 让创建数据
+
+                    } else if (self[0].state === 1) {  // 0 排队完毕
+                        // this.confirmPage = true
+                        // if(list[0].state===2){
+                        //     this.confirmPage = true;
+                        //     return
+                        // }
+                        // console.log(this.$refs.audio);
+                        this.$refs.audio.play();
+                        // this.setStatus(1);
+                        this.readyFlag = true;
+                        this.queue = 0;
+                        if (!this.timer2) {
+                            this.timer2 = setInterval(() => {
+                                if (this.time < 1) {
+                                    clearInterval(this.timer2);
+                                    this.waitFlag = false;
+                                    this.time = 60;
+                                    this.setStatus(3)
+                                }
+                                this.time -= 1;
+                            }, 1000)
+                        }
+                        window.addEventListener("beforeunload", this.forgive);
+
+                    } else if (self[0].state === 2) {
+                            this.confirmPage = true;
+                            return
+                    } else if (self[0].state === 0) {  // 排队中
+                        console.log(ret);
+                        this.name = ret.data.data[ret.data.data.length - 1].accountName;
+                        this.value = ret.data.data[ret.data.data.length - 1].amount;
+                        this.waitFlag = true;
+                        this.queue = ret.data.msg;
+                        if (!this.timer) {
+                            this.timer = setInterval(() => {
+                                this.getWaitInfo()
+                            }, 5000)  // todo 注意内存泄露
+                        }
+                    } else if(self[0].state === 4){
+                        this.confirmPage = true;
+                        this.confirmClick = true
+                    }
                 })
             }
         }
